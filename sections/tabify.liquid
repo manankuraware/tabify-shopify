@@ -1,0 +1,84 @@
+<style>
+    ul.tabifyh1, .tab-content {
+      display: flex;
+      flex-wrap:wrap;
+      list-style: none;
+      gap: 20px;
+      padding:0;
+  }
+    ul.tabifyh1 li{
+      box-shadow: 0px 2px #0091ff;
+      cursor:pointer;
+      padding: 1rem;
+    }
+  .tab-content .grid{
+    width:100%;
+  }
+</style>
+
+<div class="page-width">
+  <div class="tabifysection">
+    <ul class="tabifyh1">
+      {% for collection in section.settings.collectiontab %}
+        <li data-handle="{{ collection.handle }}" data-index="{{ forloop.index0 }}">{{ collection.title }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="tab-content"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const tabContent = document.querySelector(".tab-content");
+  const tabs = document.querySelectorAll(".tabifyh1 li");
+
+  function loadCollection(collectionHandle) {
+    fetch(`/collections/${collectionHandle}?section_id=main-collection-product-grid`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const productGrid = doc.querySelector(".product-grid");
+        if (productGrid) {
+          tabContent.innerHTML = "";
+          tabContent.appendChild(productGrid);
+        }
+      })
+      .catch(error => console.error("Error fetching collection:", error));
+  }
+
+  // Load first collection on page load
+  if (tabs.length > 0) {
+    loadCollection(tabs[0].getAttribute("data-handle"));
+  }
+
+  // Add click event to each tab
+  tabs.forEach(tab => {
+    tab.addEventListener("click", function () {
+      const collectionHandle = this.getAttribute("data-handle");
+      loadCollection(collectionHandle);
+    });
+  });
+});
+</script>
+
+
+{% schema %}
+{
+  "name": "tabify",
+  "tag": "section",
+  "class": "tabify",
+  "settings": [
+    {
+      "type": "collection_list",
+      "id": "collectiontab",
+      "label": "tab collection"
+    },
+  ],
+  "presets": [
+    {
+      "name": "tabify",
+    }
+  ],
+}
+{% endschema %}
